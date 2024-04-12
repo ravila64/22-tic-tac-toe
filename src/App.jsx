@@ -1,16 +1,26 @@
 import { useState } from 'react'
-import './App.css'
+//import './App.css'
 import confetti from "canvas-confetti";
 
-import { Square } from './components/Square.jsx';
 import { TURNS } from './constants.js';
+import { Square } from './components/Square.jsx';
 import { checkWinnerFrom } from './logic/board.js';
+import { WinnerModal } from './components/WinnerModal.jsx';
+import { checkEndGame } from './logic/board.js';
 
 export function App() {
   //const board = Array(9).fill(null);
-  const [board, setBoard] = useState(Array(9).fill(null));
+  const [board, setBoard] = useState(() => {
+    const boardFromStotage = window.localStorage.getItem('board');
+    if (boardFromStotage) return JSON.parse(boardFromStotage)
+    return Array(9).fill(null);
+  });
 
-  const [turn, setTurn] = useState(TURNS.X);
+  const [turn, setTurn] = useState(()=>{
+    const turnFromStorage = window.localStorage.getItem('turn');
+    return turnFromStorage ?? TURNS.X;
+  });
+    
   //null=no hay ganador false=empate
   const [winner, setWinner] = useState(null);
 
@@ -18,13 +28,9 @@ export function App() {
     setBoard(Array(9).fill(null));
     setTurn(TURNS.X);
     setWinner(null);
-  }
-
-  const checkEndGame = (newBoard) => {
-    // revisamos si hay empate
-    // si no hay mas espacios vacios en el tablero
-    return newBoard.every((square) => square !== null);
-    // revisa todo el tablero, si todos son diferntes de null
+    // reset localStorage
+    window.localStorage.removeItem('board');
+    window.localStorage.removeItem('turn');
   }
 
   const updateBoard = (index) => {
@@ -39,6 +45,11 @@ export function App() {
     // cambiar turno
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X;
     setTurn(newTurn);
+
+    // guardar aqui partida Y EL TURNO
+    window.localStorage.setItem('board', JSON.stringify(newBoard));
+    window.localStorage.setItem('turn', newTurn);
+
     // revisar si hay ganador
     const newWinner = checkWinnerFrom(newBoard);
     if (newWinner) {
@@ -81,27 +92,7 @@ export function App() {
         </Square>
       </section>
       {/* MANEJO DE OTRA SECCION, CON CORCHETES */}
-      {
-        winner !== null && (
-          <section className="winner">
-            <div className="text">
-              <h2>
-                {
-                  winner === false
-                    ? "Empate"
-                    : "Gano " + winner
-                }
-              </h2>
-              <header className='win'>
-                {winner && <Square>{winner}</Square>}
-              </header>
-              <footer>
-                <button onClick={resetGame}>Empezar de Nuevo</button>
-              </footer>
-            </div>
-          </section>
-        )
-      }
+      <WinnerModal resetGame={resetGame} winner={winner} />
     </main>
   )
 }

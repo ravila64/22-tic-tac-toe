@@ -1,8 +1,8 @@
 export const TURNS = {
-  X: "x",
-  O: "o",
+  X: "❤",
+  O: "✔",
 };
-
+// emojis en vscode con key win+"."
 export const WINNER_COMBOS = [
   [0, 1, 2],
   [3, 4, 5],
