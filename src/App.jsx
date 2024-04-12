@@ -1,35 +1,12 @@
 import { useState } from 'react'
 import './App.css'
-const TURNS = {
-  X: 'x',
-  O: 'o'
-}
+import confetti from "canvas-confetti";
 
-const Square = ({ children, isSelected, updateBoard, index }) => {
-  const className = `square ${isSelected ? 'is-selected' : ''}`;
-  const handleClick = () => {
-    updateBoard(index);
-  }
-  return (
-    <div onClick={handleClick} className={className}>
-      {children}
-    </div>
-  )
-}
+import { Square } from './components/Square.jsx';
+import { TURNS } from './constants.js';
+import { checkWinnerFrom } from './logic/board.js';
 
-const WINNER_COMBOS = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6]
-]
-
-
-function App() {
+export function App() {
   //const board = Array(9).fill(null);
   const [board, setBoard] = useState(Array(9).fill(null));
 
@@ -37,32 +14,22 @@ function App() {
   //null=no hay ganador false=empate
   const [winner, setWinner] = useState(null);
 
-  const checkWinner = (boardToCheck) => {
-    // revisar todas las combinaciones
-    // para ver su X u O = gano
-    for (const combo of WINNER_COMBOS) {
-      const [a, b, c] = combo;
-      if (boardToCheck[a] &&
-        boardToCheck[a] === boardToCheck[b] &&
-        boardToCheck[a] === boardToCheck[c]
-      ) {
-        return boardToCheck[a];
-      }
-    }
-    // si no hay ganador
-    return null;
-  }
-
-  const resetGame  = () => {
+  const resetGame = () => {
     setBoard(Array(9).fill(null));
     setTurn(TURNS.X);
     setWinner(null);
   }
 
+  const checkEndGame = (newBoard) => {
+    // revisamos si hay empate
+    // si no hay mas espacios vacios en el tablero
+    return newBoard.every((square) => square !== null);
+    // revisa todo el tablero, si todos son diferntes de null
+  }
+
   const updateBoard = (index) => {
     // no actualizamos si es !null, ya tiene algo
     if (board[index] || winner) return;
-
     // actualizar tablero
     const newBoard = [...board];
     //const newBoard =  structuredClone(board);
@@ -73,13 +40,16 @@ function App() {
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X;
     setTurn(newTurn);
     // revisar si hay ganador
-    const newWinner = checkWinner(newBoard);
+    const newWinner = checkWinnerFrom(newBoard);
     if (newWinner) {
-      alert(`El ganador es ${newWinner}`);
+      //alert(`El ganador es ${newWinner}`);
+      confetti();
       setWinner(newWinner); // actualiza el estado
       //actualizacion de estados son asincronos
+    } else if (checkEndGame(newBoard)) {
+      //todo: check if game is over
+      setWinner(false); // empate
     }
-    //todo: check if game is over
   }
 
   return (
@@ -95,7 +65,7 @@ function App() {
                 index={index}
                 updateBoard={updateBoard}
               >
-                {board[index]}
+                {square} {/* estaba board[index] */}
               </Square>
             )
           })
@@ -110,7 +80,7 @@ function App() {
           {TURNS.O}
         </Square>
       </section>
-
+      {/* MANEJO DE OTRA SECCION, CON CORCHETES */}
       {
         winner !== null && (
           <section className="winner">
@@ -135,4 +105,4 @@ function App() {
     </main>
   )
 }
-export default App
+// export default App
